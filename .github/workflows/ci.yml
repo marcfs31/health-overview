@@ -39,13 +39,8 @@ jobs:
       - name: Lint
         run: npx eslint src
 
+      # The database client is built lazily, so the build needs no database config.
       - name: Build
-        # The app reads DATABASE_URL at module scope. Every data route is dynamic, so
-        # nothing connects during the build, but the variable must parse for the module
-        # to load. This placeholder is never used to open a connection.
-        env:
-          DATABASE_URL: postgres://placeholder@localhost:5432/placeholder
-          AUTH_SECRET: build-time-placeholder-not-used-at-runtime
         run: npm run build
 
   deploy:
