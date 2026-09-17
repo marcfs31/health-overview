@@ -1,0 +1,38 @@
+# Files that must never reach the Vercel build or the deployed bundle.
+#
+# The most important entries are the env files: APP_PASSWORD and AUTH_SECRET belong in the
+# Vercel project's environment variables, never in an uploaded file. `vercel deploy` uploads
+# the working directory (it does not use .gitignore), so without this list a local .env.local
+# would be shipped to the build.
+
+.env
+.env.*
+!.env.example
+
+.git
+.gitignore
+
+.next
+node_modules
+out
+build
+coverage
+
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+.DS_Store
+*.pem
+
+# Local-only tooling: DB migration/seed scripts and drizzle config are not needed at runtime
+# and may embed local connection strings.
+scripts
+drizzle.config.ts
+drizzle
+
+# Local notes / agent instructions.
+AGENTS.md
+CLAUDE.md
