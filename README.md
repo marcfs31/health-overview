@@ -1,36 +1,61 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Health Overview
 
-## Getting Started
+A personal weight and body-composition tracker. It reads InBody bioimpedance reports
+straight from a PDF or a phone photo, imports Apple Health data, and charts the whole
+history on one timeline.
 
-First, run the development server:
+## Why it exists
+
+Body-composition data tends to end up scattered across clinic PDFs, a notes app, and
+Apple Health, in units and languages that do not line up. This pulls the sources into a
+single series so the trend is actually readable.
+
+## Features
+
+- **Automatic report reading.** Upload a PDF or a photo of an InBody report. A PDF with a
+  text layer is parsed locally for free; scans and photos fall back to Claude vision. Every
+  extraction is shown for review before anything is saved.
+- **History backfill.** InBody reports print a chart of your previous tests. The extractor
+  reads those too, so one upload can recover several earlier scans.
+- **Apple Health import.** Streams `export.xml` in the browser — the file never leaves the
+  device — and sends only a daily summary to the server.
+- **Trend analysis.** Time-windowed moving average, kg/week rate, plateau detection, and
+  flags for rapid swings that are water rather than fat.
+- **Segmental view.** Per-limb lean and fat mass from InBody scans.
+
+## Stack
+
+Next.js 16 (App Router) · React 19 · Tailwind v4 · Drizzle ORM · PostgreSQL · Anthropic SDK
+
+## Running it locally
 
 ```bash
+npm install
+createdb health_overview
+cp .env.example .env.local   # then fill in the values
+npm run db:push              # create the tables
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Environment
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Variable | Required | Purpose |
+|---|---|---|
+| `DATABASE_URL` | yes | PostgreSQL connection string |
+| `AUTH_SECRET` | yes | Signs the session cookie. Generate with `openssl rand -hex 32` |
+| `APP_PASSWORD` | yes | The password that opens the app. Authentication fails closed if unset |
+| `ANTHROPIC_API_KEY` | no | Enables reading image-only reports and the written summary |
+| `EXTRACTION_MODEL` | no | Defaults to `claude-opus-5` |
+| `INSIGHTS_MODEL` | no | Defaults to `claude-sonnet-5` |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Notes on data
 
-## Learn More
+Measurement data is personal health information. It lives in your own database and is
+never committed to this repository — `.env*` and any local data files are ignored, and
+`.vercelignore` keeps them out of deployments too.
 
-To learn more about Next.js, take a look at the following resources:
+## Deployment
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The GitHub Actions workflow typechecks, lints and builds every push. It also deploys to
+Vercel once `VERCEL_TOKEN`, `VERCEL_ORG_ID` and `VERCEL_PROJECT_ID` are set as repository
+secrets; until then the deploy job reports that it is not configured and passes.
