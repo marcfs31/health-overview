@@ -1,5 +1,5 @@
 import { asc } from "drizzle-orm";
-import { db, measurements } from "@/lib/db";
+import { db, isDatabaseConfigured, measurements } from "@/lib/db";
 import {
   movingAverage,
   rapidSwings,
@@ -9,6 +9,7 @@ import {
 } from "@/lib/stats";
 import { BodyFatChart, CompositionChart, WeightChart, type ChartPoint } from "@/components/charts";
 import { InsightsPanel } from "@/components/insights";
+import { SetupNotice } from "@/components/setup-notice";
 
 export const dynamic = "force-dynamic";
 
@@ -54,6 +55,10 @@ function StatTile({
 }
 
 export default async function Dashboard() {
+  // Checked before touching `db`: an unconfigured deployment is a setup state to
+  // explain, not an exception to throw.
+  if (!isDatabaseConfigured()) return <SetupNotice />;
+
   const rows = await db.select().from(measurements).orderBy(asc(measurements.measuredAt));
 
   const readings: Reading[] = rows.map((r) => ({

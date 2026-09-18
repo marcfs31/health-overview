@@ -31,3 +31,17 @@ export const db = new Proxy({} as Db, {
 });
 
 export * from "./schema";
+
+/**
+ * Whether a database is configured at all.
+ *
+ * Server Components call this BEFORE touching `db`, so a deployment with no
+ * DATABASE_URL renders an explanatory setup page instead of throwing. Without it
+ * the miss surfaces as Next's generic "A server error occurred" screen: in
+ * production Next strips the real message and ships only an opaque digest, so the
+ * one person who can fix the problem is told nothing about what is wrong.
+ */
+export function isDatabaseConfigured(): boolean {
+  const url = process.env.DATABASE_URL;
+  return typeof url === "string" && url.trim().length > 0;
+}

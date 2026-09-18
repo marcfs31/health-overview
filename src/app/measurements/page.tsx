@@ -3,8 +3,9 @@ import { desc } from "drizzle-orm";
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { db, measurements, type Measurement } from "@/lib/db";
+import { db, isDatabaseConfigured, measurements, type Measurement } from "@/lib/db";
 import { SegmentalView } from "@/components/segmental";
+import { SetupNotice } from "@/components/setup-notice";
 import { POST as postManualEntry } from "@/app/api/measurements/manual/route";
 import { DELETE as deleteMeasurementRow } from "@/app/api/measurements/[id]/route";
 
@@ -143,6 +144,9 @@ export default async function MeasurementsPage({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
+  // Checked before touching `db`, for the same reason as the dashboard.
+  if (!isDatabaseConfigured()) return <SetupNotice />;
+
   const sp = await searchParams;
   const sourceRaw = sp.source;
   const sourceParam = typeof sourceRaw === "string" ? sourceRaw : "todas";
